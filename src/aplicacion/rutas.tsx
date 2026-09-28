@@ -2,18 +2,23 @@ import { useEffect, useState } from 'react'
 import { LoaderCircle, LogOut, ShieldCheck } from 'lucide-react'
 import { usarAutenticacion } from '@/dominio/autenticacion/contexto-autenticacion'
 import { PantallaInicioSesion } from '@/modulos/autenticacion/PantallaInicioSesion'
+import { PantallaPanelAdministrativo } from '@/modulos/panel_administrativo/PantallaPanelAdministrativo'
 import { PantallaPanelCliente } from '@/modulos/panel_cliente/PantallaPanelCliente'
+import { PantallaGestionClientes } from '@/modulos/clientes/PantallaGestionClientes'
 import { PantallaPerfil } from '@/modulos/perfil/PantallaPerfil'
 import { PantallaDetalleProyecto } from '@/modulos/proyectos/PantallaDetalleProyecto'
 import { PantallaListaProyectos } from '@/modulos/proyectos/PantallaListaProyectos'
 
 const RUTA_INICIO_SESION = '/inicio-sesion'
 const RUTA_APLICACION_PRIVADA = '/aplicacion'
+const RUTA_PANEL_ADMINISTRATIVO = '/aplicacion/administracion'
 
 type RutaReconocida =
   | { tipo: 'inicio' }
   | { tipo: 'inicio_sesion' }
   | { tipo: 'panel' }
+  | { tipo: 'panel_administrativo' }
+  | { tipo: 'gestion_clientes' }
   | { tipo: 'lista_proyectos' }
   | { tipo: 'perfil' }
   | { tipo: 'detalle_proyecto'; proyectoId: string }
@@ -24,6 +29,18 @@ function reconocerRuta(ruta: string): RutaReconocida {
   if (ruta === RUTA_INICIO_SESION) return { tipo: 'inicio_sesion' }
   if (ruta === RUTA_APLICACION_PRIVADA || ruta === `${RUTA_APLICACION_PRIVADA}/`) {
     return { tipo: 'panel' }
+  }
+  if (
+    ruta === RUTA_PANEL_ADMINISTRATIVO ||
+    ruta === `${RUTA_PANEL_ADMINISTRATIVO}/`
+  ) {
+    return { tipo: 'panel_administrativo' }
+  }
+  if (
+    ruta === '/aplicacion/administracion/clientes' ||
+    ruta === '/aplicacion/administracion/clientes/'
+  ) {
+    return { tipo: 'gestion_clientes' }
   }
   if (ruta === '/aplicacion/proyectos' || ruta === '/aplicacion/proyectos/') {
     return { tipo: 'lista_proyectos' }
@@ -49,6 +66,7 @@ export function Rutas() {
   const {
     autenticado,
     cargando,
+    cargandoPerfil,
     perfil,
     rol_usuario,
   } = usarAutenticacion()
@@ -67,27 +85,59 @@ export function Rutas() {
   }, [])
 
   useEffect(() => {
-    if (cargando) return
+    if (cargando || (autenticado && cargandoPerfil)) return
 
     const debeIrAlInicioSesion =
       !autenticado && rutaActual !== RUTA_INICIO_SESION
     const debeIrAlPanel =
       autenticado &&
       (rutaReconocida.tipo === 'inicio_sesion' || rutaReconocida.tipo === 'inicio')
-    const rutaDestino = debeIrAlInicioSesion
-      ? RUTA_INICIO_SESION
-      : debeIrAlPanel
-        ? RUTA_APLICACION_PRIVADA
-        : null
+    const rutaCliente =
+      rutaReconocida.tipo === 'lista_proyectos' ||
+      rutaReconocida.tipo === 'perfil' ||
+      rutaReconocida.tipo === 'detalle_proyecto'
+    const debeIrAlPanelAdministrativo =
+      autenticado &&
+      rol_usuario === 'administrador' &&
+      rutaCliente
+    const debeIrAlPanelCliente =
+      autenticado &&
+      rol_usuario === 'cliente' &&
+      (rutaReconocida.tipo === 'panel_administrativo' ||
+        rutaReconocida.tipo === 'gestion_clientes')
+    const destinoPanel =
+      rol_usuario === 'administrador'
+        ? RUTA_PANEL_ADMINISTRATIVO
+        : RUTA_APLICACION_PRIVADA
+    let rutaDestino: string | null = null
+    if (debeIrAlInicioSesion) {
+      rutaDestino = RUTA_INICIO_SESION
+    } else if (debeIrAlPanel) {
+      rutaDestino = destinoPanel
+    } else if (debeIrAlPanelAdministrativo) {
+      rutaDestino = RUTA_PANEL_ADMINISTRATIVO
+    } else if (debeIrAlPanelCliente) {
+      rutaDestino = RUTA_APLICACION_PRIVADA
+    }
 
     if (rutaDestino && rutaActual !== rutaDestino) {
       window.history.replaceState(null, '', rutaDestino)
       establecerRutaActual(rutaDestino)
     }
-  }, [autenticado, cargando, rutaActual, rutaReconocida.tipo])
+  }, [
+    autenticado,
+    cargando,
+    cargandoPerfil,
+    rol_usuario,
+    rutaActual,
+    rutaReconocida.tipo,
+  ])
 
   if (cargando) return <PantallaCargaSesion />
   if (!autenticado) return <PantallaInicioSesion />
+  if (cargandoPerfil) {
+    return <PantallaCargaSesion mensaje="Cargando tu perfil..." />
+  }
 
   if (rutaReconocida.tipo === 'desconocida') {
     return <PantallaRutaNoEncontrada />
@@ -95,11 +145,21 @@ export function Rutas() {
 
   const rutaPrivada =
     rutaReconocida.tipo === 'panel' ||
+    rutaReconocida.tipo === 'panel_administrativo' ||
+    rutaReconocida.tipo === 'gestion_clientes' ||
     rutaReconocida.tipo === 'lista_proyectos' ||
     rutaReconocida.tipo === 'perfil' ||
     rutaReconocida.tipo === 'detalle_proyecto' ||
     rutaReconocida.tipo === 'inicio' ||
     rutaReconocida.tipo === 'inicio_sesion'
+
+  if (rol_usuario === 'administrador' && perfil && rutaPrivada) {
+    if (rutaReconocida.tipo === 'gestion_clientes') {
+      return <PantallaGestionClientes />
+    }
+
+    return <PantallaPanelAdministrativo />
+  }
 
   if (rol_usuario === 'cliente' && perfil && rutaPrivada) {
     if (rutaReconocida.tipo === 'lista_proyectos') {
@@ -144,7 +204,11 @@ function PantallaRutaNoEncontrada() {
   )
 }
 
-function PantallaCargaSesion() {
+function PantallaCargaSesion({
+  mensaje = 'Comprobando tu sesión...',
+}: {
+  mensaje?: string
+}) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-yanax-verde-claro px-6 py-12">
       <div
@@ -156,7 +220,7 @@ function PantallaCargaSesion() {
           aria-hidden="true"
           className="size-5 animate-spin text-yanax-turquesa"
         />
-        Comprobando tu sesión...
+        {mensaje}
       </div>
     </main>
   )
