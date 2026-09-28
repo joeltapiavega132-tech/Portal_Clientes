@@ -3,9 +3,37 @@ import { LoaderCircle, LogOut, ShieldCheck } from 'lucide-react'
 import { usarAutenticacion } from '@/dominio/autenticacion/contexto-autenticacion'
 import { PantallaInicioSesion } from '@/modulos/autenticacion/PantallaInicioSesion'
 import { PantallaPanelCliente } from '@/modulos/panel_cliente/PantallaPanelCliente'
+import { PantallaDetalleProyecto } from '@/modulos/proyectos/PantallaDetalleProyecto'
 
 const RUTA_INICIO_SESION = '/inicio-sesion'
 const RUTA_APLICACION_PRIVADA = '/aplicacion'
+
+type RutaReconocida =
+  | { tipo: 'inicio' }
+  | { tipo: 'inicio_sesion' }
+  | { tipo: 'panel' }
+  | { tipo: 'detalle_proyecto'; proyectoId: string }
+  | { tipo: 'desconocida' }
+
+function reconocerRuta(ruta: string): RutaReconocida {
+  if (ruta === '/') return { tipo: 'inicio' }
+  if (ruta === RUTA_INICIO_SESION) return { tipo: 'inicio_sesion' }
+  if (ruta === RUTA_APLICACION_PRIVADA || ruta === `${RUTA_APLICACION_PRIVADA}/`) {
+    return { tipo: 'panel' }
+  }
+
+  const coincidencia = ruta.match(/^\/aplicacion\/proyectos\/([^/]+)\/?$/)
+  if (!coincidencia) return { tipo: 'desconocida' }
+
+  try {
+    return {
+      tipo: 'detalle_proyecto',
+      proyectoId: decodeURIComponent(coincidencia[1]),
+    }
+  } catch {
+    return { tipo: 'desconocida' }
+  }
+}
 
 export function Rutas() {
   const {
@@ -17,6 +45,7 @@ export function Rutas() {
   const [rutaActual, establecerRutaActual] = useState(
     () => window.location.pathname,
   )
+  const rutaReconocida = reconocerRuta(rutaActual)
 
   useEffect(() => {
     function sincronizarRuta() {
@@ -30,21 +59,69 @@ export function Rutas() {
   useEffect(() => {
     if (cargando) return
 
-    const rutaDestino = autenticado
-      ? RUTA_APLICACION_PRIVADA
-      : RUTA_INICIO_SESION
+    const debeIrAlInicioSesion =
+      !autenticado && rutaActual !== RUTA_INICIO_SESION
+    const debeIrAlPanel =
+      autenticado &&
+      (rutaReconocida.tipo === 'inicio_sesion' || rutaReconocida.tipo === 'inicio')
+    const rutaDestino = debeIrAlInicioSesion
+      ? RUTA_INICIO_SESION
+      : debeIrAlPanel
+        ? RUTA_APLICACION_PRIVADA
+        : null
 
-    if (rutaActual !== rutaDestino) {
+    if (rutaDestino && rutaActual !== rutaDestino) {
       window.history.replaceState(null, '', rutaDestino)
       establecerRutaActual(rutaDestino)
     }
-  }, [autenticado, cargando, rutaActual])
+  }, [autenticado, cargando, rutaActual, rutaReconocida.tipo])
 
   if (cargando) return <PantallaCargaSesion />
   if (!autenticado) return <PantallaInicioSesion />
-  if (rol_usuario === 'cliente' && perfil) return <PantallaPanelCliente />
+
+  if (rutaReconocida.tipo === 'desconocida') {
+    return <PantallaRutaNoEncontrada />
+  }
+
+  const rutaPrivada =
+    rutaReconocida.tipo === 'panel' ||
+    rutaReconocida.tipo === 'detalle_proyecto' ||
+    rutaReconocida.tipo === 'inicio' ||
+    rutaReconocida.tipo === 'inicio_sesion'
+
+  if (rol_usuario === 'cliente' && perfil && rutaPrivada) {
+    if (rutaReconocida.tipo === 'detalle_proyecto') {
+      return <PantallaDetalleProyecto proyectoId={rutaReconocida.proyectoId} />
+    }
+
+    return <PantallaPanelCliente />
+  }
 
   return <PantallaAplicacionPrivada />
+}
+
+function PantallaRutaNoEncontrada() {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-yanax-verde-claro px-5 py-10">
+      <section className="w-full max-w-lg rounded-2xl border border-yanax-turquesa/10 bg-white p-6 text-center shadow-sm sm:p-9">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-yanax-morado">
+          Yanax Client Portal
+        </p>
+        <h1 className="mt-3 text-2xl font-semibold text-yanax-azul-profundo">
+          Página no encontrada
+        </h1>
+        <p className="mt-3 text-sm leading-6 text-yanax-azul-profundo/75">
+          La dirección no corresponde a una página disponible.
+        </p>
+        <a
+          className="mt-6 inline-flex min-h-11 items-center justify-center rounded-lg bg-yanax-turquesa px-4 text-sm font-semibold text-white transition hover:bg-yanax-verde focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yanax-naranja focus-visible:ring-offset-2"
+          href={RUTA_APLICACION_PRIVADA}
+        >
+          Volver al panel
+        </a>
+      </section>
+    </main>
+  )
 }
 
 function PantallaCargaSesion() {

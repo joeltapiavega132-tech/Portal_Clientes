@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
+  ArrowUpRight,
   Building2,
   CalendarDays,
   FolderKanban,
@@ -346,6 +347,14 @@ export function PantallaPanelCliente() {
                           )}
                         </dl>
                       )}
+
+                      <a
+                        className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-yanax-turquesa px-4 text-sm font-semibold text-white transition hover:bg-yanax-verde focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yanax-naranja focus-visible:ring-offset-2"
+                        href={`/aplicacion/proyectos/${encodeURIComponent(proyecto.id)}`}
+                      >
+                        <span>Ver proyecto</span>
+                        <ArrowUpRight aria-hidden="true" className="size-4" />
+                      </a>
                     </article>
                   ))}
                 </div>
