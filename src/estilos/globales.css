@@ -6,6 +6,13 @@
   --color-muted: var(--atenuado);
   --color-muted-foreground: var(--texto-atenuado);
   --color-border: var(--borde);
+  --color-yanax-verde-claro: #d9e8e2;
+  --color-yanax-naranja: #ff9932;
+  --color-yanax-coral: #e65f4a;
+  --color-yanax-morado: #5e1d54;
+  --color-yanax-turquesa: #114c5a;
+  --color-yanax-azul-profundo: #172b36;
+  --color-yanax-verde: #315b30;
   --radius-sm: calc(var(--radio) - 4px);
   --radius-md: calc(var(--radio) - 2px);
   --radius-lg: var(--radio);
