@@ -6,6 +6,7 @@ import {
   Clock3,
   FolderKanban,
   LoaderCircle,
+  MessageSquareText,
   Newspaper,
   RotateCcw,
   Circle,
@@ -56,6 +57,15 @@ const iconosEstadoHito = {
   en_progreso: CircleDashed,
   completado: CheckCircle2,
 } satisfies Record<EstadoHitoProyecto, typeof Circle>
+
+const estilosEstadoHito: Record<EstadoHitoProyecto, string> = {
+  pendiente:
+    'border-yanax-turquesa/20 bg-yanax-verde-claro text-yanax-azul-profundo',
+  en_progreso:
+    'border-yanax-naranja/45 bg-yanax-naranja/10 text-yanax-azul-profundo',
+  completado:
+    'border-yanax-verde/30 bg-yanax-verde/10 text-yanax-verde',
+}
 
 export function PantallaDetalleProyecto({
   proyectoId,
@@ -289,7 +299,7 @@ export function PantallaDetalleProyecto({
 
             <section
               aria-labelledby="titulo-seguimiento-proyecto"
-              className="space-y-5 rounded-2xl border border-yanax-morado/15 bg-white p-5 shadow-sm sm:space-y-7 sm:p-7"
+              className="space-y-5 rounded-2xl border border-yanax-morado/15 bg-white p-4 shadow-sm sm:space-y-7 sm:p-7"
             >
               <div className="flex items-start gap-3">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-yanax-verde-claro text-yanax-morado">
@@ -309,141 +319,193 @@ export function PantallaDetalleProyecto({
                 </div>
               </div>
 
-              <section aria-labelledby="titulo-hitos-proyecto">
-                <div className="flex items-center gap-2 border-b border-yanax-turquesa/10 pb-3">
-                  <FolderKanban
-                    aria-hidden="true"
-                    className="size-5 text-yanax-turquesa"
-                  />
-                  <h3
-                    className="text-base font-semibold sm:text-lg"
-                    id="titulo-hitos-proyecto"
-                  >
-                    Hitos del proyecto
-                  </h3>
-                </div>
+              <div className="grid min-w-0 gap-5 lg:grid-cols-2 lg:gap-6">
+                <section
+                  aria-labelledby="titulo-hitos-proyecto"
+                  className="min-w-0 rounded-xl border border-yanax-turquesa/10 bg-white p-4 sm:p-5"
+                >
+                  <div className="flex items-center gap-2 border-b border-yanax-turquesa/10 pb-3">
+                    <FolderKanban
+                      aria-hidden="true"
+                      className="size-5 shrink-0 text-yanax-turquesa"
+                    />
+                    <h3
+                      className="text-base font-semibold sm:text-lg"
+                      id="titulo-hitos-proyecto"
+                    >
+                      Hitos del proyecto
+                    </h3>
+                  </div>
 
-                {estadoDetalle.hitos === null ? (
-                  <p className="mt-4 rounded-xl border border-yanax-coral/35 bg-yanax-coral/10 p-4 text-sm leading-6">
-                    No fue posible cargar los hitos. Intenta recargar el detalle
-                    del proyecto.
-                  </p>
-                ) : estadoDetalle.hitos.length === 0 ? (
-                  <p className="mt-4 rounded-xl bg-yanax-verde-claro/60 p-4 text-sm leading-6 text-yanax-azul-profundo/75">
-                    Aún no hay hitos registrados para este proyecto.
-                  </p>
-                ) : (
-                  <ol className="mt-4 space-y-3">
-                    {estadoDetalle.hitos.map((hito) => {
-                      const IconoEstado = iconosEstadoHito[hito.estado]
+                  {estadoDetalle.hitos === null ? (
+                    <p
+                      aria-live="polite"
+                      className="mt-4 rounded-xl border border-yanax-coral/35 bg-yanax-coral/10 p-4 text-sm leading-6"
+                      role="alert"
+                    >
+                      No fue posible cargar los hitos. Puedes reintentar la
+                      carga del seguimiento.
+                    </p>
+                  ) : estadoDetalle.hitos.length === 0 ? (
+                    <div
+                      aria-live="polite"
+                      className="mt-4 flex min-h-36 flex-col items-center justify-center rounded-xl bg-yanax-verde-claro/60 px-4 py-6 text-center"
+                      role="status"
+                    >
+                      <CalendarDays
+                        aria-hidden="true"
+                        className="size-6 text-yanax-turquesa"
+                      />
+                      <p className="mt-3 text-sm font-semibold">
+                        Aún no hay hitos registrados
+                      </p>
+                      <p className="mt-1 max-w-xs text-sm leading-6 text-yanax-azul-profundo/70">
+                        Cuando Yanax agregue hitos, podrás consultar aquí sus
+                        estados y fechas.
+                      </p>
+                    </div>
+                  ) : (
+                    <ol className="mt-4 space-y-3">
+                      {estadoDetalle.hitos.map((hito) => {
+                        const IconoEstado = iconosEstadoHito[hito.estado]
 
-                      return (
-                        <li
-                          className="min-w-0 rounded-xl border border-yanax-turquesa/10 bg-yanax-verde-claro/35 p-4 sm:p-5"
-                          key={hito.id}
-                        >
-                          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="flex min-w-0 items-start gap-3">
-                              <IconoEstado
-                                aria-hidden="true"
-                                className="mt-0.5 size-5 shrink-0 text-yanax-turquesa"
-                              />
-                              <div className="min-w-0">
-                                <h4 className="break-words text-sm font-semibold sm:text-base">
-                                  {hito.nombre}
-                                </h4>
-                                {hito.descripcion && (
-                                  <p className="mt-1 break-words whitespace-pre-line text-sm leading-6 text-yanax-azul-profundo/75">
-                                    {hito.descripcion}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            <span className="inline-flex min-h-8 w-fit max-w-full shrink-0 items-center rounded-full border border-yanax-turquesa/25 bg-white px-3 text-xs font-semibold text-yanax-azul-profundo">
-                              {etiquetasEstadoHito[hito.estado]}
-                            </span>
-                          </div>
-
-                          {(hito.fecha_prevista || hito.fecha_completada) && (
-                            <dl className="mt-4 grid gap-3 border-t border-yanax-turquesa/10 pt-3 text-sm sm:grid-cols-2">
-                              {hito.fecha_prevista && (
-                                <div className="min-w-0">
-                                  <dt className="text-xs font-medium text-yanax-azul-profundo/65">
-                                    Fecha prevista
-                                  </dt>
-                                  <dd className="mt-1 break-words font-medium">
-                                    {formatearFecha(hito.fecha_prevista)}
-                                  </dd>
-                                </div>
-                              )}
-                              {hito.fecha_completada && (
-                                <div className="min-w-0">
-                                  <dt className="text-xs font-medium text-yanax-azul-profundo/65">
-                                    Fecha completada
-                                  </dt>
-                                  <dd className="mt-1 break-words font-medium">
-                                    {formatearFecha(hito.fecha_completada)}
-                                  </dd>
-                                </div>
-                              )}
-                            </dl>
-                          )}
-                        </li>
-                      )
-                    })}
-                  </ol>
-                )}
-              </section>
-
-              <section aria-labelledby="titulo-actualizaciones-proyecto">
-                <div className="flex items-center gap-2 border-b border-yanax-turquesa/10 pb-3">
-                  <Newspaper
-                    aria-hidden="true"
-                    className="size-5 text-yanax-turquesa"
-                  />
-                  <h3
-                    className="text-base font-semibold sm:text-lg"
-                    id="titulo-actualizaciones-proyecto"
-                  >
-                    Actualizaciones
-                  </h3>
-                </div>
-
-                {estadoDetalle.actualizaciones === null ? (
-                  <p className="mt-4 rounded-xl border border-yanax-coral/35 bg-yanax-coral/10 p-4 text-sm leading-6">
-                    No fue posible cargar las actualizaciones. Intenta recargar
-                    el detalle del proyecto.
-                  </p>
-                ) : estadoDetalle.actualizaciones.length === 0 ? (
-                  <p className="mt-4 rounded-xl bg-yanax-verde-claro/60 p-4 text-sm leading-6 text-yanax-azul-profundo/75">
-                    Aún no hay actualizaciones para este proyecto.
-                  </p>
-                ) : (
-                  <ol className="mt-4 space-y-3">
-                    {estadoDetalle.actualizaciones.map((actualizacion) => (
-                      <li
-                        className="min-w-0 rounded-xl border border-yanax-turquesa/10 p-4 sm:p-5"
-                        key={actualizacion.id}
-                      >
-                        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                          <h4 className="min-w-0 break-words text-sm font-semibold sm:text-base">
-                            {actualizacion.titulo}
-                          </h4>
-                          <time
-                            className="shrink-0 text-xs text-yanax-azul-profundo/65 sm:text-right"
-                            dateTime={actualizacion.creado_en}
+                        return (
+                          <li
+                            className="min-w-0 rounded-xl border border-yanax-turquesa/15 bg-yanax-verde-claro/30 p-4 sm:p-5"
+                            key={hito.id}
                           >
-                            {formatearFechaHora(actualizacion.creado_en)}
-                          </time>
-                        </div>
-                        <p className="mt-3 break-words whitespace-pre-line text-sm leading-6 text-yanax-azul-profundo/80">
-                          {actualizacion.contenido}
-                        </p>
-                      </li>
-                    ))}
-                  </ol>
-                )}
-              </section>
+                            <div className="flex min-w-0 flex-col gap-3">
+                              <div className="flex min-w-0 items-start justify-between gap-2 sm:gap-3">
+                                <div className="flex min-w-0 items-start gap-3">
+                                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white">
+                                    <IconoEstado
+                                      aria-hidden="true"
+                                      className="size-5 text-yanax-turquesa"
+                                    />
+                                  </span>
+                                  <h4 className="min-w-0 break-words pt-1 text-sm font-semibold sm:text-base">
+                                    {hito.nombre}
+                                  </h4>
+                                </div>
+                                <span
+                                  className={`inline-flex min-h-8 max-w-[45%] shrink-0 items-center justify-center gap-1.5 rounded-full border px-2 text-center text-xs font-semibold sm:max-w-none sm:px-3 ${estilosEstadoHito[hito.estado]}`}
+                                >
+                                  <span className="break-words">
+                                    {etiquetasEstadoHito[hito.estado]}
+                                  </span>
+                                </span>
+                              </div>
+
+                              {hito.descripcion && (
+                                <p className="break-words whitespace-pre-line pl-12 text-sm leading-6 text-yanax-azul-profundo/75">
+                                  {hito.descripcion}
+                                </p>
+                              )}
+
+                              {(hito.fecha_prevista ||
+                                hito.fecha_completada) && (
+                                <dl className="grid gap-3 border-t border-yanax-turquesa/10 pt-3 text-sm sm:grid-cols-2">
+                                  {hito.fecha_prevista && (
+                                    <div className="min-w-0">
+                                      <dt className="text-xs font-medium text-yanax-azul-profundo/65">
+                                        Fecha prevista
+                                      </dt>
+                                      <dd className="mt-1 break-words font-medium">
+                                        {formatearFecha(hito.fecha_prevista)}
+                                      </dd>
+                                    </div>
+                                  )}
+                                  {hito.fecha_completada && (
+                                    <div className="min-w-0">
+                                      <dt className="text-xs font-medium text-yanax-azul-profundo/65">
+                                        Fecha completada
+                                      </dt>
+                                      <dd className="mt-1 break-words font-medium">
+                                        {formatearFecha(hito.fecha_completada)}
+                                      </dd>
+                                    </div>
+                                  )}
+                                </dl>
+                              )}
+                            </div>
+                          </li>
+                        )
+                      })}
+                    </ol>
+                  )}
+                </section>
+
+                <section
+                  aria-labelledby="titulo-actualizaciones-proyecto"
+                  className="min-w-0 rounded-xl border border-yanax-turquesa/10 bg-white p-4 sm:p-5"
+                >
+                  <div className="flex items-center gap-2 border-b border-yanax-turquesa/10 pb-3">
+                    <Newspaper
+                      aria-hidden="true"
+                      className="size-5 shrink-0 text-yanax-turquesa"
+                    />
+                    <h3
+                      className="text-base font-semibold sm:text-lg"
+                      id="titulo-actualizaciones-proyecto"
+                    >
+                      Actualizaciones
+                    </h3>
+                  </div>
+
+                  {estadoDetalle.actualizaciones === null ? (
+                    <p
+                      aria-live="polite"
+                      className="mt-4 rounded-xl border border-yanax-coral/35 bg-yanax-coral/10 p-4 text-sm leading-6"
+                      role="alert"
+                    >
+                      No fue posible cargar las actualizaciones. Puedes
+                      reintentar la carga del seguimiento.
+                    </p>
+                  ) : estadoDetalle.actualizaciones.length === 0 ? (
+                    <div
+                      aria-live="polite"
+                      className="mt-4 flex min-h-36 flex-col items-center justify-center rounded-xl bg-yanax-verde-claro/60 px-4 py-6 text-center"
+                      role="status"
+                    >
+                      <MessageSquareText
+                        aria-hidden="true"
+                        className="size-6 text-yanax-turquesa"
+                      />
+                      <p className="mt-3 text-sm font-semibold">
+                        Aún no hay actualizaciones
+                      </p>
+                      <p className="mt-1 max-w-xs text-sm leading-6 text-yanax-azul-profundo/70">
+                        Aquí aparecerán las novedades que Yanax comparta sobre
+                        este proyecto.
+                      </p>
+                    </div>
+                  ) : (
+                    <ol className="mt-4 space-y-3">
+                      {estadoDetalle.actualizaciones.map((actualizacion) => (
+                        <li
+                          className="min-w-0 rounded-xl border border-yanax-turquesa/15 p-4 sm:p-5"
+                          key={actualizacion.id}
+                        >
+                          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <h4 className="min-w-0 break-words text-sm font-semibold sm:text-base">
+                              {actualizacion.titulo}
+                            </h4>
+                            <time
+                              className="max-w-full break-words text-xs text-yanax-azul-profundo/65 sm:shrink-0 sm:text-right"
+                              dateTime={actualizacion.creado_en}
+                            >
+                              {formatearFechaHora(actualizacion.creado_en)}
+                            </time>
+                          </div>
+                          <p className="mt-3 break-words whitespace-pre-line text-sm leading-6 text-yanax-azul-profundo/80">
+                            {actualizacion.contenido}
+                          </p>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                </section>
+              </div>
 
               {(estadoDetalle.hitos === null ||
                 estadoDetalle.actualizaciones === null) && (
