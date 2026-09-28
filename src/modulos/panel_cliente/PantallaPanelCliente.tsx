@@ -5,10 +5,10 @@ import {
   CalendarDays,
   FolderKanban,
   LoaderCircle,
-  LogOut,
   Phone,
   UserRound,
 } from 'lucide-react'
+import { NavegacionPrivada } from '@/componentes/diseno/NavegacionPrivada'
 import { usarAutenticacion } from '@/dominio/autenticacion/contexto-autenticacion'
 import { obtenerClientes } from '@/dominio/clientes/servicio-clientes'
 import type { Cliente } from '@/dominio/clientes/tipos-cliente'
@@ -27,12 +27,11 @@ const etiquetasEstadoProyecto: Record<EstadoProyecto, string> = {
 }
 
 export function PantallaPanelCliente() {
-  const { cerrarSesion, perfil } = usarAutenticacion()
+  const { perfil } = usarAutenticacion()
   const [clientes, establecerClientes] = useState<Cliente[]>([])
   const [proyectos, establecerProyectos] = useState<Proyecto[]>([])
   const [cargando, establecerCargando] = useState(true)
   const [errorCarga, establecerErrorCarga] = useState<string | null>(null)
-  const [errorAlCerrar, establecerErrorAlCerrar] = useState(false)
   const [intentoCarga, establecerIntentoCarga] = useState(0)
 
   useEffect(() => {
@@ -81,42 +80,14 @@ export function PantallaPanelCliente() {
     }
   }, [intentoCarga])
 
-  async function manejarCierreSesion() {
-    establecerErrorAlCerrar(false)
-
-    try {
-      const { error } = await cerrarSesion()
-      if (error) establecerErrorAlCerrar(true)
-    } catch {
-      establecerErrorAlCerrar(true)
-    }
-  }
-
   const nombreCompleto = [perfil?.nombre, perfil?.apellido]
     .filter((parte) => parte?.trim())
     .join(' ')
 
   return (
-    <main className="min-h-screen bg-yanax-verde-claro px-4 py-5 text-yanax-azul-profundo sm:px-7 sm:py-8">
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3">
-        <a
-          aria-label="Yanax Client Portal, inicio"
-          className="text-base font-bold tracking-[0.16em] text-yanax-azul-profundo sm:text-lg"
-          href="/aplicacion"
-        >
-          YANAX
-        </a>
-        <button
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-yanax-turquesa/20 bg-white px-3 text-sm font-semibold text-yanax-turquesa transition hover:bg-yanax-turquesa hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yanax-naranja focus-visible:ring-offset-2 sm:px-4"
-          onClick={() => void manejarCierreSesion()}
-          type="button"
-        >
-          <LogOut aria-hidden="true" className="size-4" />
-          <span>Cerrar sesión</span>
-        </button>
-      </header>
-
-      <div className="mx-auto w-full max-w-6xl pb-12 pt-8 sm:pt-12">
+    <main className="min-h-screen bg-yanax-verde-claro text-yanax-azul-profundo">
+      <NavegacionPrivada seccionActual="inicio" />
+      <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-6 sm:px-7 sm:pt-9">
         <section className="rounded-2xl bg-yanax-azul-profundo px-5 py-7 text-white shadow-sm sm:px-8 sm:py-9">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-yanax-verde-claro">
             Yanax Client Portal
@@ -136,14 +107,24 @@ export function PantallaPanelCliente() {
           </div>
         </section>
 
-        {errorAlCerrar && (
-          <p
-            aria-live="polite"
-            className="mt-5 rounded-xl border border-yanax-coral/50 bg-white px-4 py-3 text-sm font-medium"
-            role="alert"
+        {!cargando && !errorCarga && (
+          <section
+            aria-label="Resumen de tu cuenta"
+            className="mt-5 grid gap-3 sm:grid-cols-2"
           >
-            No fue posible cerrar la sesión. Inténtalo de nuevo.
-          </p>
+            <article className="rounded-xl border border-yanax-turquesa/10 bg-white p-4 sm:p-5">
+              <p className="text-sm font-medium text-yanax-azul-profundo/70">
+                Organizaciones asociadas
+              </p>
+              <p className="mt-1 text-2xl font-semibold">{clientes.length}</p>
+            </article>
+            <article className="rounded-xl border border-yanax-turquesa/10 bg-white p-4 sm:p-5">
+              <p className="text-sm font-medium text-yanax-azul-profundo/70">
+                Proyectos disponibles
+              </p>
+              <p className="mt-1 text-2xl font-semibold">{proyectos.length}</p>
+            </article>
+          </section>
         )}
 
         {cargando && (

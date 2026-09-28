@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, CalendarDays, LoaderCircle } from 'lucide-react'
+import { CalendarDays, LoaderCircle } from 'lucide-react'
+import { NavegacionPrivada } from '@/componentes/diseno/NavegacionPrivada'
 import { obtenerProyecto } from '@/dominio/proyectos/servicio-proyectos'
 import type { EstadoProyecto, Proyecto } from '@/dominio/proyectos/tipos-proyecto'
 
@@ -57,25 +58,16 @@ export function PantallaDetalleProyecto({
   }, [intentoCarga, proyectoId])
 
   return (
-    <main className="min-h-screen bg-yanax-verde-claro px-4 py-5 text-yanax-azul-profundo sm:px-7 sm:py-8">
-      <header className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3">
-        <a
-          aria-label="Yanax Client Portal, inicio"
-          className="text-base font-bold tracking-[0.16em] text-yanax-azul-profundo sm:text-lg"
-          href="/aplicacion"
-        >
-          YANAX
-        </a>
-        <a
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-yanax-turquesa/20 bg-white px-3 text-sm font-semibold text-yanax-turquesa transition hover:bg-yanax-turquesa hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yanax-naranja focus-visible:ring-offset-2 sm:px-4"
-          href="/aplicacion"
-        >
-          <ArrowLeft aria-hidden="true" className="size-4" />
-          <span>Volver al panel</span>
-        </a>
-      </header>
+    <main className="min-h-screen bg-yanax-verde-claro text-yanax-azul-profundo">
+      <NavegacionPrivada seccionActual="proyectos" />
 
-      <div className="mx-auto w-full max-w-5xl pb-12 pt-8 sm:pt-12">
+      <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-6 sm:px-7 sm:pt-9">
+        <a
+          className="mb-5 inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-sm font-semibold text-yanax-turquesa transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yanax-naranja focus-visible:ring-offset-2"
+          href="/aplicacion"
+        >
+          Volver al panel
+        </a>
         {estadoDetalle.tipo === 'cargando' && (
           <div
             aria-live="polite"

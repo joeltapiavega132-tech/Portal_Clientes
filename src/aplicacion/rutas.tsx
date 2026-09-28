@@ -3,7 +3,9 @@ import { LoaderCircle, LogOut, ShieldCheck } from 'lucide-react'
 import { usarAutenticacion } from '@/dominio/autenticacion/contexto-autenticacion'
 import { PantallaInicioSesion } from '@/modulos/autenticacion/PantallaInicioSesion'
 import { PantallaPanelCliente } from '@/modulos/panel_cliente/PantallaPanelCliente'
+import { PantallaPerfil } from '@/modulos/perfil/PantallaPerfil'
 import { PantallaDetalleProyecto } from '@/modulos/proyectos/PantallaDetalleProyecto'
+import { PantallaListaProyectos } from '@/modulos/proyectos/PantallaListaProyectos'
 
 const RUTA_INICIO_SESION = '/inicio-sesion'
 const RUTA_APLICACION_PRIVADA = '/aplicacion'
@@ -12,6 +14,8 @@ type RutaReconocida =
   | { tipo: 'inicio' }
   | { tipo: 'inicio_sesion' }
   | { tipo: 'panel' }
+  | { tipo: 'lista_proyectos' }
+  | { tipo: 'perfil' }
   | { tipo: 'detalle_proyecto'; proyectoId: string }
   | { tipo: 'desconocida' }
 
@@ -20,6 +24,12 @@ function reconocerRuta(ruta: string): RutaReconocida {
   if (ruta === RUTA_INICIO_SESION) return { tipo: 'inicio_sesion' }
   if (ruta === RUTA_APLICACION_PRIVADA || ruta === `${RUTA_APLICACION_PRIVADA}/`) {
     return { tipo: 'panel' }
+  }
+  if (ruta === '/aplicacion/proyectos' || ruta === '/aplicacion/proyectos/') {
+    return { tipo: 'lista_proyectos' }
+  }
+  if (ruta === '/aplicacion/perfil' || ruta === '/aplicacion/perfil/') {
+    return { tipo: 'perfil' }
   }
 
   const coincidencia = ruta.match(/^\/aplicacion\/proyectos\/([^/]+)\/?$/)
@@ -85,11 +95,21 @@ export function Rutas() {
 
   const rutaPrivada =
     rutaReconocida.tipo === 'panel' ||
+    rutaReconocida.tipo === 'lista_proyectos' ||
+    rutaReconocida.tipo === 'perfil' ||
     rutaReconocida.tipo === 'detalle_proyecto' ||
     rutaReconocida.tipo === 'inicio' ||
     rutaReconocida.tipo === 'inicio_sesion'
 
   if (rol_usuario === 'cliente' && perfil && rutaPrivada) {
+    if (rutaReconocida.tipo === 'lista_proyectos') {
+      return <PantallaListaProyectos />
+    }
+
+    if (rutaReconocida.tipo === 'perfil') {
+      return <PantallaPerfil />
+    }
+
     if (rutaReconocida.tipo === 'detalle_proyecto') {
       return <PantallaDetalleProyecto proyectoId={rutaReconocida.proyectoId} />
     }
