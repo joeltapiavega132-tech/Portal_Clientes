@@ -1,13 +1,25 @@
 import { useEffect, useState } from 'react'
 import {
   CalendarDays,
+  CheckCircle2,
   CircleHelp,
   Clock3,
   FolderKanban,
   LoaderCircle,
+  Newspaper,
+  RotateCcw,
+  Circle,
+  CircleDashed,
 } from 'lucide-react'
 import { NavegacionPrivada } from '@/componentes/diseno/NavegacionPrivada'
+import { obtenerActualizacionesProyecto } from '@/dominio/proyectos/servicio-actualizaciones-proyecto'
+import { obtenerHitosProyecto } from '@/dominio/proyectos/servicio-hitos-proyecto'
 import { obtenerProyecto } from '@/dominio/proyectos/servicio-proyectos'
+import type { ActualizacionProyecto } from '@/dominio/proyectos/tipos-actualizacion-proyecto'
+import type {
+  EstadoHitoProyecto,
+  HitoProyecto,
+} from '@/dominio/proyectos/tipos-hito-proyecto'
 import type { EstadoProyecto, Proyecto } from '@/dominio/proyectos/tipos-proyecto'
 
 interface PropiedadesPantallaDetalleProyecto {
@@ -18,7 +30,12 @@ type EstadoDetalleProyecto =
   | { tipo: 'cargando' }
   | { tipo: 'error' }
   | { tipo: 'no_encontrado' }
-  | { tipo: 'cargado'; proyecto: Proyecto }
+  | {
+      tipo: 'cargado'
+      proyecto: Proyecto
+      hitos: HitoProyecto[] | null
+      actualizaciones: ActualizacionProyecto[] | null
+    }
 
 const etiquetasEstadoProyecto: Record<EstadoProyecto, string> = {
   planificacion: 'Planificación',
@@ -27,6 +44,18 @@ const etiquetasEstadoProyecto: Record<EstadoProyecto, string> = {
   completado: 'Completado',
   archivado: 'Archivado',
 }
+
+const etiquetasEstadoHito: Record<EstadoHitoProyecto, string> = {
+  pendiente: 'Pendiente',
+  en_progreso: 'En progreso',
+  completado: 'Completado',
+}
+
+const iconosEstadoHito = {
+  pendiente: Circle,
+  en_progreso: CircleDashed,
+  completado: CheckCircle2,
+} satisfies Record<EstadoHitoProyecto, typeof Circle>
 
 export function PantallaDetalleProyecto({
   proyectoId,
@@ -39,24 +68,36 @@ export function PantallaDetalleProyecto({
     let consultaActiva = true
     establecerEstadoDetalle({ tipo: 'cargando' })
 
-    async function cargarProyecto() {
+    async function cargarDetalle() {
       try {
-        const { data, error } = await obtenerProyecto(proyectoId)
+        const [respuestaProyecto, respuestaHitos, respuestaActualizaciones] =
+          await Promise.all([
+            obtenerProyecto(proyectoId),
+            obtenerHitosProyecto(proyectoId),
+            obtenerActualizacionesProyecto(proyectoId),
+          ])
         if (!consultaActiva) return
 
-        if (error) {
+        if (respuestaProyecto.error) {
           establecerEstadoDetalle({ tipo: 'error' })
-        } else if (!data) {
+        } else if (!respuestaProyecto.data) {
           establecerEstadoDetalle({ tipo: 'no_encontrado' })
         } else {
-          establecerEstadoDetalle({ tipo: 'cargado', proyecto: data })
+          establecerEstadoDetalle({
+            tipo: 'cargado',
+            proyecto: respuestaProyecto.data,
+            hitos: respuestaHitos.error ? null : respuestaHitos.data,
+            actualizaciones: respuestaActualizaciones.error
+              ? null
+              : respuestaActualizaciones.data,
+          })
         }
       } catch {
         if (consultaActiva) establecerEstadoDetalle({ tipo: 'error' })
       }
     }
 
-    void cargarProyecto()
+    void cargarDetalle()
 
     return () => {
       consultaActiva = false
@@ -248,7 +289,7 @@ export function PantallaDetalleProyecto({
 
             <section
               aria-labelledby="titulo-seguimiento-proyecto"
-              className="rounded-2xl border border-yanax-morado/15 bg-white p-5 shadow-sm sm:p-7"
+              className="space-y-5 rounded-2xl border border-yanax-morado/15 bg-white p-5 shadow-sm sm:space-y-7 sm:p-7"
             >
               <div className="flex items-start gap-3">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-yanax-verde-claro text-yanax-morado">
@@ -262,11 +303,159 @@ export function PantallaDetalleProyecto({
                     Seguimiento del proyecto
                   </h2>
                   <p className="mt-2 break-words text-sm leading-6 text-yanax-azul-profundo/75">
-                    En futuras mejoras podrás consultar aquí las novedades y
-                    avances que Yanax comparta sobre este proyecto.
+                    Consulta los hitos y las actualizaciones compartidas por
+                    Yanax para este proyecto.
                   </p>
                 </div>
               </div>
+
+              <section aria-labelledby="titulo-hitos-proyecto">
+                <div className="flex items-center gap-2 border-b border-yanax-turquesa/10 pb-3">
+                  <FolderKanban
+                    aria-hidden="true"
+                    className="size-5 text-yanax-turquesa"
+                  />
+                  <h3
+                    className="text-base font-semibold sm:text-lg"
+                    id="titulo-hitos-proyecto"
+                  >
+                    Hitos del proyecto
+                  </h3>
+                </div>
+
+                {estadoDetalle.hitos === null ? (
+                  <p className="mt-4 rounded-xl border border-yanax-coral/35 bg-yanax-coral/10 p-4 text-sm leading-6">
+                    No fue posible cargar los hitos. Intenta recargar el detalle
+                    del proyecto.
+                  </p>
+                ) : estadoDetalle.hitos.length === 0 ? (
+                  <p className="mt-4 rounded-xl bg-yanax-verde-claro/60 p-4 text-sm leading-6 text-yanax-azul-profundo/75">
+                    Aún no hay hitos registrados para este proyecto.
+                  </p>
+                ) : (
+                  <ol className="mt-4 space-y-3">
+                    {estadoDetalle.hitos.map((hito) => {
+                      const IconoEstado = iconosEstadoHito[hito.estado]
+
+                      return (
+                        <li
+                          className="min-w-0 rounded-xl border border-yanax-turquesa/10 bg-yanax-verde-claro/35 p-4 sm:p-5"
+                          key={hito.id}
+                        >
+                          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="flex min-w-0 items-start gap-3">
+                              <IconoEstado
+                                aria-hidden="true"
+                                className="mt-0.5 size-5 shrink-0 text-yanax-turquesa"
+                              />
+                              <div className="min-w-0">
+                                <h4 className="break-words text-sm font-semibold sm:text-base">
+                                  {hito.nombre}
+                                </h4>
+                                {hito.descripcion && (
+                                  <p className="mt-1 break-words whitespace-pre-line text-sm leading-6 text-yanax-azul-profundo/75">
+                                    {hito.descripcion}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <span className="inline-flex min-h-8 w-fit max-w-full shrink-0 items-center rounded-full border border-yanax-turquesa/25 bg-white px-3 text-xs font-semibold text-yanax-azul-profundo">
+                              {etiquetasEstadoHito[hito.estado]}
+                            </span>
+                          </div>
+
+                          {(hito.fecha_prevista || hito.fecha_completada) && (
+                            <dl className="mt-4 grid gap-3 border-t border-yanax-turquesa/10 pt-3 text-sm sm:grid-cols-2">
+                              {hito.fecha_prevista && (
+                                <div className="min-w-0">
+                                  <dt className="text-xs font-medium text-yanax-azul-profundo/65">
+                                    Fecha prevista
+                                  </dt>
+                                  <dd className="mt-1 break-words font-medium">
+                                    {formatearFecha(hito.fecha_prevista)}
+                                  </dd>
+                                </div>
+                              )}
+                              {hito.fecha_completada && (
+                                <div className="min-w-0">
+                                  <dt className="text-xs font-medium text-yanax-azul-profundo/65">
+                                    Fecha completada
+                                  </dt>
+                                  <dd className="mt-1 break-words font-medium">
+                                    {formatearFecha(hito.fecha_completada)}
+                                  </dd>
+                                </div>
+                              )}
+                            </dl>
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ol>
+                )}
+              </section>
+
+              <section aria-labelledby="titulo-actualizaciones-proyecto">
+                <div className="flex items-center gap-2 border-b border-yanax-turquesa/10 pb-3">
+                  <Newspaper
+                    aria-hidden="true"
+                    className="size-5 text-yanax-turquesa"
+                  />
+                  <h3
+                    className="text-base font-semibold sm:text-lg"
+                    id="titulo-actualizaciones-proyecto"
+                  >
+                    Actualizaciones
+                  </h3>
+                </div>
+
+                {estadoDetalle.actualizaciones === null ? (
+                  <p className="mt-4 rounded-xl border border-yanax-coral/35 bg-yanax-coral/10 p-4 text-sm leading-6">
+                    No fue posible cargar las actualizaciones. Intenta recargar
+                    el detalle del proyecto.
+                  </p>
+                ) : estadoDetalle.actualizaciones.length === 0 ? (
+                  <p className="mt-4 rounded-xl bg-yanax-verde-claro/60 p-4 text-sm leading-6 text-yanax-azul-profundo/75">
+                    Aún no hay actualizaciones para este proyecto.
+                  </p>
+                ) : (
+                  <ol className="mt-4 space-y-3">
+                    {estadoDetalle.actualizaciones.map((actualizacion) => (
+                      <li
+                        className="min-w-0 rounded-xl border border-yanax-turquesa/10 p-4 sm:p-5"
+                        key={actualizacion.id}
+                      >
+                        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <h4 className="min-w-0 break-words text-sm font-semibold sm:text-base">
+                            {actualizacion.titulo}
+                          </h4>
+                          <time
+                            className="shrink-0 text-xs text-yanax-azul-profundo/65 sm:text-right"
+                            dateTime={actualizacion.creado_en}
+                          >
+                            {formatearFechaHora(actualizacion.creado_en)}
+                          </time>
+                        </div>
+                        <p className="mt-3 break-words whitespace-pre-line text-sm leading-6 text-yanax-azul-profundo/80">
+                          {actualizacion.contenido}
+                        </p>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </section>
+
+              {(estadoDetalle.hitos === null ||
+                estadoDetalle.actualizaciones === null) && (
+                <button
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-yanax-turquesa/25 px-4 text-sm font-semibold text-yanax-turquesa transition hover:bg-yanax-verde-claro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yanax-naranja focus-visible:ring-offset-2"
+                  onClick={() => establecerIntentoCarga((intento) => intento + 1)}
+                  type="button"
+                >
+                  <RotateCcw aria-hidden="true" className="size-4" />
+                  Reintentar carga del seguimiento
+                </button>
+              )}
             </section>
           </div>
         )}
