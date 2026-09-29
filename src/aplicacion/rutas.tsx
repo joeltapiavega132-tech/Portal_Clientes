@@ -12,6 +12,7 @@ import { PantallaDetalleProyectoAdministrativo } from '@/modulos/proyectos/Panta
 import { PantallaGestionMiembrosProyecto } from '@/modulos/proyectos/PantallaGestionMiembrosProyecto'
 import { PantallaGestionProyectosCliente } from '@/modulos/proyectos/PantallaGestionProyectosCliente'
 import { PantallaListaProyectos } from '@/modulos/proyectos/PantallaListaProyectos'
+import { PantallaPruebaRlsSprints } from '@/modulos/desarrollo/PantallaPruebaRlsSprints'
 
 const RUTA_INICIO_SESION = '/inicio-sesion'
 const RUTA_APLICACION_PRIVADA = '/aplicacion'
@@ -30,9 +31,13 @@ type RutaReconocida =
   | { tipo: 'lista_proyectos' }
   | { tipo: 'perfil' }
   | { tipo: 'detalle_proyecto'; proyectoId: string }
+  | { tipo: 'herramienta_prueba_rls' }
   | { tipo: 'desconocida' }
 
 function reconocerRuta(ruta: string): RutaReconocida {
+  if (import.meta.env.DEV && ruta === '/__desarrollo/validacion-rls-sprints') {
+    return { tipo: 'herramienta_prueba_rls' }
+  }
   if (ruta === '/') return { tipo: 'inicio' }
   if (ruta === RUTA_INICIO_SESION) return { tipo: 'inicio_sesion' }
   if (ruta === RUTA_APLICACION_PRIVADA || ruta === `${RUTA_APLICACION_PRIVADA}/`) {
@@ -207,7 +212,12 @@ export function Rutas() {
     return <PantallaRutaNoEncontrada />
   }
 
+  if (import.meta.env.DEV && rutaReconocida.tipo === 'herramienta_prueba_rls') {
+    return <PantallaPruebaRlsSprints />
+  }
+
   const rutaPrivada =
+    rutaReconocida.tipo === 'herramienta_prueba_rls' ||
     rutaReconocida.tipo === 'panel' ||
     rutaReconocida.tipo === 'panel_administrativo' ||
     rutaReconocida.tipo === 'gestion_clientes' ||
