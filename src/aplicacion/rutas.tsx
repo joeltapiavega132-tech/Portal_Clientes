@@ -8,6 +8,8 @@ import { PantallaGestionClientes } from '@/modulos/clientes/PantallaGestionClien
 import { PantallaGestionUsuariosCliente } from '@/modulos/clientes/PantallaGestionUsuariosCliente'
 import { PantallaPerfil } from '@/modulos/perfil/PantallaPerfil'
 import { PantallaDetalleProyecto } from '@/modulos/proyectos/PantallaDetalleProyecto'
+import { PantallaDetalleProyectoAdministrativo } from '@/modulos/proyectos/PantallaDetalleProyectoAdministrativo'
+import { PantallaGestionProyectosCliente } from '@/modulos/proyectos/PantallaGestionProyectosCliente'
 import { PantallaListaProyectos } from '@/modulos/proyectos/PantallaListaProyectos'
 
 const RUTA_INICIO_SESION = '/inicio-sesion'
@@ -21,6 +23,8 @@ type RutaReconocida =
   | { tipo: 'panel_administrativo' }
   | { tipo: 'gestion_clientes' }
   | { tipo: 'gestion_usuarios_cliente'; clienteId: string }
+  | { tipo: 'gestion_proyectos_cliente'; clienteId: string }
+  | { tipo: 'detalle_proyecto_administrativo'; proyectoId: string }
   | { tipo: 'lista_proyectos' }
   | { tipo: 'perfil' }
   | { tipo: 'detalle_proyecto'; proyectoId: string }
@@ -52,6 +56,32 @@ function reconocerRuta(ruta: string): RutaReconocida {
       return {
         tipo: 'gestion_usuarios_cliente',
         clienteId: decodeURIComponent(coincidenciaUsuariosCliente[1]),
+      }
+    } catch {
+      return { tipo: 'desconocida' }
+    }
+  }
+  const coincidenciaProyectosCliente = ruta.match(
+    /^\/aplicacion\/administracion\/clientes\/([^/]+)\/proyectos\/?$/,
+  )
+  if (coincidenciaProyectosCliente) {
+    try {
+      return {
+        tipo: 'gestion_proyectos_cliente',
+        clienteId: decodeURIComponent(coincidenciaProyectosCliente[1]),
+      }
+    } catch {
+      return { tipo: 'desconocida' }
+    }
+  }
+  const coincidenciaDetalleAdministrativo = ruta.match(
+    /^\/aplicacion\/administracion\/proyectos\/([^/]+)\/?$/,
+  )
+  if (coincidenciaDetalleAdministrativo) {
+    try {
+      return {
+        tipo: 'detalle_proyecto_administrativo',
+        proyectoId: decodeURIComponent(coincidenciaDetalleAdministrativo[1]),
       }
     } catch {
       return { tipo: 'desconocida' }
@@ -120,7 +150,9 @@ export function Rutas() {
       rol_usuario === 'cliente' &&
       (rutaReconocida.tipo === 'panel_administrativo' ||
         rutaReconocida.tipo === 'gestion_clientes' ||
-        rutaReconocida.tipo === 'gestion_usuarios_cliente')
+        rutaReconocida.tipo === 'gestion_usuarios_cliente' ||
+        rutaReconocida.tipo === 'gestion_proyectos_cliente' ||
+        rutaReconocida.tipo === 'detalle_proyecto_administrativo')
     const destinoPanel =
       rol_usuario === 'administrador'
         ? RUTA_PANEL_ADMINISTRATIVO
@@ -164,6 +196,8 @@ export function Rutas() {
     rutaReconocida.tipo === 'panel_administrativo' ||
     rutaReconocida.tipo === 'gestion_clientes' ||
     rutaReconocida.tipo === 'gestion_usuarios_cliente' ||
+    rutaReconocida.tipo === 'gestion_proyectos_cliente' ||
+    rutaReconocida.tipo === 'detalle_proyecto_administrativo' ||
     rutaReconocida.tipo === 'lista_proyectos' ||
     rutaReconocida.tipo === 'perfil' ||
     rutaReconocida.tipo === 'detalle_proyecto' ||
@@ -177,6 +211,20 @@ export function Rutas() {
     if (rutaReconocida.tipo === 'gestion_usuarios_cliente') {
       return (
         <PantallaGestionUsuariosCliente clienteId={rutaReconocida.clienteId} />
+      )
+    }
+    if (rutaReconocida.tipo === 'gestion_proyectos_cliente') {
+      return (
+        <PantallaGestionProyectosCliente
+          clienteId={rutaReconocida.clienteId}
+        />
+      )
+    }
+    if (rutaReconocida.tipo === 'detalle_proyecto_administrativo') {
+      return (
+        <PantallaDetalleProyectoAdministrativo
+          proyectoId={rutaReconocida.proyectoId}
+        />
       )
     }
 

@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import {
   Building2,
   CalendarDays,
+  FolderKanban,
   LoaderCircle,
   Pencil,
   Plus,
@@ -509,6 +510,13 @@ export function PantallaGestionClientes() {
                     >
                       <UsersRound aria-hidden="true" className="size-4" />
                       Gestionar usuarios
+                    </a>
+                    <a
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-yanax-morado/25 px-4 text-sm font-semibold text-yanax-morado transition hover:bg-yanax-morado/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yanax-naranja focus-visible:ring-offset-2 sm:w-auto"
+                      href={`/aplicacion/administracion/clientes/${encodeURIComponent(cliente.id)}/proyectos`}
+                    >
+                      <FolderKanban aria-hidden="true" className="size-4" />
+                      Gestionar proyectos
                     </a>
                   </div>
                 </article>
