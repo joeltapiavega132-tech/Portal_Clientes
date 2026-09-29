@@ -9,6 +9,7 @@ import { PantallaGestionUsuariosCliente } from '@/modulos/clientes/PantallaGesti
 import { PantallaPerfil } from '@/modulos/perfil/PantallaPerfil'
 import { PantallaDetalleProyecto } from '@/modulos/proyectos/PantallaDetalleProyecto'
 import { PantallaDetalleProyectoAdministrativo } from '@/modulos/proyectos/PantallaDetalleProyectoAdministrativo'
+import { PantallaGestionMiembrosProyecto } from '@/modulos/proyectos/PantallaGestionMiembrosProyecto'
 import { PantallaGestionProyectosCliente } from '@/modulos/proyectos/PantallaGestionProyectosCliente'
 import { PantallaListaProyectos } from '@/modulos/proyectos/PantallaListaProyectos'
 
@@ -25,6 +26,7 @@ type RutaReconocida =
   | { tipo: 'gestion_usuarios_cliente'; clienteId: string }
   | { tipo: 'gestion_proyectos_cliente'; clienteId: string }
   | { tipo: 'detalle_proyecto_administrativo'; proyectoId: string }
+  | { tipo: 'gestion_miembros_proyecto'; proyectoId: string }
   | { tipo: 'lista_proyectos' }
   | { tipo: 'perfil' }
   | { tipo: 'detalle_proyecto'; proyectoId: string }
@@ -69,6 +71,19 @@ function reconocerRuta(ruta: string): RutaReconocida {
       return {
         tipo: 'gestion_proyectos_cliente',
         clienteId: decodeURIComponent(coincidenciaProyectosCliente[1]),
+      }
+    } catch {
+      return { tipo: 'desconocida' }
+    }
+  }
+  const coincidenciaMiembrosProyecto = ruta.match(
+    /^\/aplicacion\/administracion\/proyectos\/([^/]+)\/miembros\/?$/,
+  )
+  if (coincidenciaMiembrosProyecto) {
+    try {
+      return {
+        tipo: 'gestion_miembros_proyecto',
+        proyectoId: decodeURIComponent(coincidenciaMiembrosProyecto[1]),
       }
     } catch {
       return { tipo: 'desconocida' }
@@ -152,7 +167,8 @@ export function Rutas() {
         rutaReconocida.tipo === 'gestion_clientes' ||
         rutaReconocida.tipo === 'gestion_usuarios_cliente' ||
         rutaReconocida.tipo === 'gestion_proyectos_cliente' ||
-        rutaReconocida.tipo === 'detalle_proyecto_administrativo')
+        rutaReconocida.tipo === 'detalle_proyecto_administrativo' ||
+        rutaReconocida.tipo === 'gestion_miembros_proyecto')
     const destinoPanel =
       rol_usuario === 'administrador'
         ? RUTA_PANEL_ADMINISTRATIVO
@@ -198,6 +214,7 @@ export function Rutas() {
     rutaReconocida.tipo === 'gestion_usuarios_cliente' ||
     rutaReconocida.tipo === 'gestion_proyectos_cliente' ||
     rutaReconocida.tipo === 'detalle_proyecto_administrativo' ||
+    rutaReconocida.tipo === 'gestion_miembros_proyecto' ||
     rutaReconocida.tipo === 'lista_proyectos' ||
     rutaReconocida.tipo === 'perfil' ||
     rutaReconocida.tipo === 'detalle_proyecto' ||
@@ -223,6 +240,13 @@ export function Rutas() {
     if (rutaReconocida.tipo === 'detalle_proyecto_administrativo') {
       return (
         <PantallaDetalleProyectoAdministrativo
+          proyectoId={rutaReconocida.proyectoId}
+        />
+      )
+    }
+    if (rutaReconocida.tipo === 'gestion_miembros_proyecto') {
+      return (
+        <PantallaGestionMiembrosProyecto
           proyectoId={rutaReconocida.proyectoId}
         />
       )

@@ -7,6 +7,7 @@ import {
   LoaderCircle,
   Pencil,
   RotateCcw,
+  UsersRound,
 } from 'lucide-react'
 import { NavegacionAdministrativa } from '@/componentes/diseno/NavegacionAdministrativa'
 import { obtenerClientes } from '@/dominio/clientes/servicio-clientes'
@@ -306,14 +307,23 @@ export function PantallaDetalleProyectoAdministrativo({
                       El cliente asociado se mantiene fijo desde esta pantalla.
                     </p>
                   </div>
-                  <button
-                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-yanax-turquesa/25 px-4 text-sm font-semibold text-yanax-turquesa transition hover:bg-yanax-verde-claro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yanax-naranja focus-visible:ring-offset-2 sm:w-auto"
-                    onClick={iniciarEdicion}
-                    type="button"
-                  >
-                    <Pencil aria-hidden="true" className="size-4" />
-                    Editar proyecto
-                  </button>
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                    <a
+                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-yanax-turquesa/25 px-4 text-sm font-semibold text-yanax-turquesa transition hover:bg-yanax-verde-claro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yanax-naranja focus-visible:ring-offset-2"
+                      href={`/aplicacion/administracion/proyectos/${encodeURIComponent(proyecto.id)}/miembros`}
+                    >
+                      <UsersRound aria-hidden="true" className="size-4" />
+                      Gestionar miembros
+                    </a>
+                    <button
+                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-yanax-turquesa/25 px-4 text-sm font-semibold text-yanax-turquesa transition hover:bg-yanax-verde-claro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yanax-naranja focus-visible:ring-offset-2"
+                      onClick={iniciarEdicion}
+                      type="button"
+                    >
+                      <Pencil aria-hidden="true" className="size-4" />
+                      Editar proyecto
+                    </button>
+                  </div>
                 </div>
 
                 <dl className="mt-5 grid gap-4 border-t border-yanax-turquesa/10 pt-5 sm:grid-cols-2">
