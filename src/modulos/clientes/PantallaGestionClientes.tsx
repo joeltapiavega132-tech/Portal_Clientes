@@ -8,6 +8,7 @@ import {
   Plus,
   RotateCcw,
   UserRound,
+  UsersRound,
   Phone,
 } from 'lucide-react'
 import { NavegacionAdministrativa } from '@/componentes/diseno/NavegacionAdministrativa'
@@ -493,14 +494,23 @@ export function PantallaGestionClientes() {
                     )}
                   </dl>
 
-                  <button
-                    className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-yanax-turquesa/25 px-4 text-sm font-semibold text-yanax-turquesa transition hover:bg-yanax-verde-claro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yanax-naranja focus-visible:ring-offset-2 sm:w-auto"
-                    onClick={() => abrirFormularioEdicion(cliente)}
-                    type="button"
-                  >
-                    <Pencil aria-hidden="true" className="size-4" />
-                    Editar cliente
-                  </button>
+                  <div className="mt-5 grid gap-2 sm:flex sm:flex-wrap">
+                    <button
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-yanax-turquesa/25 px-4 text-sm font-semibold text-yanax-turquesa transition hover:bg-yanax-verde-claro focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yanax-naranja focus-visible:ring-offset-2 sm:w-auto"
+                      onClick={() => abrirFormularioEdicion(cliente)}
+                      type="button"
+                    >
+                      <Pencil aria-hidden="true" className="size-4" />
+                      Editar cliente
+                    </button>
+                    <a
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-yanax-turquesa px-4 text-sm font-semibold text-white transition hover:bg-yanax-verde focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yanax-naranja focus-visible:ring-offset-2 sm:w-auto"
+                      href={`/aplicacion/administracion/clientes/${encodeURIComponent(cliente.id)}/usuarios`}
+                    >
+                      <UsersRound aria-hidden="true" className="size-4" />
+                      Gestionar usuarios
+                    </a>
+                  </div>
                 </article>
               ))}
             </div>

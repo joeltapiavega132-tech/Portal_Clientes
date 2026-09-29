@@ -5,6 +5,7 @@ import { PantallaInicioSesion } from '@/modulos/autenticacion/PantallaInicioSesi
 import { PantallaPanelAdministrativo } from '@/modulos/panel_administrativo/PantallaPanelAdministrativo'
 import { PantallaPanelCliente } from '@/modulos/panel_cliente/PantallaPanelCliente'
 import { PantallaGestionClientes } from '@/modulos/clientes/PantallaGestionClientes'
+import { PantallaGestionUsuariosCliente } from '@/modulos/clientes/PantallaGestionUsuariosCliente'
 import { PantallaPerfil } from '@/modulos/perfil/PantallaPerfil'
 import { PantallaDetalleProyecto } from '@/modulos/proyectos/PantallaDetalleProyecto'
 import { PantallaListaProyectos } from '@/modulos/proyectos/PantallaListaProyectos'
@@ -19,6 +20,7 @@ type RutaReconocida =
   | { tipo: 'panel' }
   | { tipo: 'panel_administrativo' }
   | { tipo: 'gestion_clientes' }
+  | { tipo: 'gestion_usuarios_cliente'; clienteId: string }
   | { tipo: 'lista_proyectos' }
   | { tipo: 'perfil' }
   | { tipo: 'detalle_proyecto'; proyectoId: string }
@@ -41,6 +43,19 @@ function reconocerRuta(ruta: string): RutaReconocida {
     ruta === '/aplicacion/administracion/clientes/'
   ) {
     return { tipo: 'gestion_clientes' }
+  }
+  const coincidenciaUsuariosCliente = ruta.match(
+    /^\/aplicacion\/administracion\/clientes\/([^/]+)\/usuarios\/?$/,
+  )
+  if (coincidenciaUsuariosCliente) {
+    try {
+      return {
+        tipo: 'gestion_usuarios_cliente',
+        clienteId: decodeURIComponent(coincidenciaUsuariosCliente[1]),
+      }
+    } catch {
+      return { tipo: 'desconocida' }
+    }
   }
   if (ruta === '/aplicacion/proyectos' || ruta === '/aplicacion/proyectos/') {
     return { tipo: 'lista_proyectos' }
@@ -104,7 +119,8 @@ export function Rutas() {
       autenticado &&
       rol_usuario === 'cliente' &&
       (rutaReconocida.tipo === 'panel_administrativo' ||
-        rutaReconocida.tipo === 'gestion_clientes')
+        rutaReconocida.tipo === 'gestion_clientes' ||
+        rutaReconocida.tipo === 'gestion_usuarios_cliente')
     const destinoPanel =
       rol_usuario === 'administrador'
         ? RUTA_PANEL_ADMINISTRATIVO
@@ -147,6 +163,7 @@ export function Rutas() {
     rutaReconocida.tipo === 'panel' ||
     rutaReconocida.tipo === 'panel_administrativo' ||
     rutaReconocida.tipo === 'gestion_clientes' ||
+    rutaReconocida.tipo === 'gestion_usuarios_cliente' ||
     rutaReconocida.tipo === 'lista_proyectos' ||
     rutaReconocida.tipo === 'perfil' ||
     rutaReconocida.tipo === 'detalle_proyecto' ||
@@ -156,6 +173,11 @@ export function Rutas() {
   if (rol_usuario === 'administrador' && perfil && rutaPrivada) {
     if (rutaReconocida.tipo === 'gestion_clientes') {
       return <PantallaGestionClientes />
+    }
+    if (rutaReconocida.tipo === 'gestion_usuarios_cliente') {
+      return (
+        <PantallaGestionUsuariosCliente clienteId={rutaReconocida.clienteId} />
+      )
     }
 
     return <PantallaPanelAdministrativo />
