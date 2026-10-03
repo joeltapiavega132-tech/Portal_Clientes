@@ -22,6 +22,10 @@ export function solicitarRecuperacionContrasena(correo: string) {
   return clienteSupabase.auth.resetPasswordForEmail(correo)
 }
 
+export function establecerContrasenaUsuario(contrasena: string) {
+  return clienteSupabase.auth.updateUser({ password: contrasena })
+}
+
 export function obtenerSesionActual() {
   return clienteSupabase.auth.getSession()
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { LoaderCircle, LogOut, ShieldCheck } from 'lucide-react'
 import { usarAutenticacion } from '@/dominio/autenticacion/contexto-autenticacion'
 import { PantallaInicioSesion } from '@/modulos/autenticacion/PantallaInicioSesion'
+import { PantallaActivarCuenta } from '@/modulos/autenticacion/PantallaActivarCuenta'
 import { PantallaPanelAdministrativo } from '@/modulos/panel_administrativo/PantallaPanelAdministrativo'
 import { PantallaPanelCliente } from '@/modulos/panel_cliente/PantallaPanelCliente'
 import { PantallaGestionClientes } from '@/modulos/clientes/PantallaGestionClientes'
@@ -13,6 +14,7 @@ import { PantallaGestionMiembrosProyecto } from '@/modulos/proyectos/PantallaGes
 import { PantallaGestionProyectosCliente } from '@/modulos/proyectos/PantallaGestionProyectosCliente'
 import { PantallaListaProyectos } from '@/modulos/proyectos/PantallaListaProyectos'
 import { PantallaPruebaRlsSprints } from '@/modulos/desarrollo/PantallaPruebaRlsSprints'
+import { PantallaGestionUsuarios } from '@/modulos/usuarios/PantallaGestionUsuarios'
 
 const RUTA_INICIO_SESION = '/inicio-sesion'
 const RUTA_APLICACION_PRIVADA = '/aplicacion'
@@ -24,6 +26,7 @@ type RutaReconocida =
   | { tipo: 'panel' }
   | { tipo: 'panel_administrativo' }
   | { tipo: 'gestion_clientes' }
+  | { tipo: 'gestion_usuarios' }
   | { tipo: 'gestion_usuarios_cliente'; clienteId: string }
   | { tipo: 'gestion_proyectos_cliente'; clienteId: string }
   | { tipo: 'detalle_proyecto_administrativo'; proyectoId: string }
@@ -32,6 +35,7 @@ type RutaReconocida =
   | { tipo: 'perfil' }
   | { tipo: 'detalle_proyecto'; proyectoId: string }
   | { tipo: 'herramienta_prueba_rls' }
+  | { tipo: 'activar_cuenta' }
   | { tipo: 'desconocida' }
 
 function reconocerRuta(ruta: string): RutaReconocida {
@@ -40,6 +44,9 @@ function reconocerRuta(ruta: string): RutaReconocida {
   }
   if (ruta === '/') return { tipo: 'inicio' }
   if (ruta === RUTA_INICIO_SESION) return { tipo: 'inicio_sesion' }
+  if (ruta === '/activar-cuenta' || ruta === '/activar-cuenta/') {
+    return { tipo: 'activar_cuenta' }
+  }
   if (ruta === RUTA_APLICACION_PRIVADA || ruta === `${RUTA_APLICACION_PRIVADA}/`) {
     return { tipo: 'panel' }
   }
@@ -54,6 +61,12 @@ function reconocerRuta(ruta: string): RutaReconocida {
     ruta === '/aplicacion/administracion/clientes/'
   ) {
     return { tipo: 'gestion_clientes' }
+  }
+  if (
+    ruta === '/aplicacion/administracion/usuarios' ||
+    ruta === '/aplicacion/administracion/usuarios/'
+  ) {
+    return { tipo: 'gestion_usuarios' }
   }
   const coincidenciaUsuariosCliente = ruta.match(
     /^\/aplicacion\/administracion\/clientes\/([^/]+)\/usuarios\/?$/,
@@ -153,7 +166,9 @@ export function Rutas() {
     if (cargando || (autenticado && cargandoPerfil)) return
 
     const debeIrAlInicioSesion =
-      !autenticado && rutaActual !== RUTA_INICIO_SESION
+      !autenticado &&
+      rutaActual !== RUTA_INICIO_SESION &&
+      rutaReconocida.tipo !== 'activar_cuenta'
     const debeIrAlPanel =
       autenticado &&
       (rutaReconocida.tipo === 'inicio_sesion' || rutaReconocida.tipo === 'inicio')
@@ -170,6 +185,7 @@ export function Rutas() {
       rol_usuario === 'cliente' &&
       (rutaReconocida.tipo === 'panel_administrativo' ||
         rutaReconocida.tipo === 'gestion_clientes' ||
+        rutaReconocida.tipo === 'gestion_usuarios' ||
         rutaReconocida.tipo === 'gestion_usuarios_cliente' ||
         rutaReconocida.tipo === 'gestion_proyectos_cliente' ||
         rutaReconocida.tipo === 'detalle_proyecto_administrativo' ||
@@ -203,10 +219,23 @@ export function Rutas() {
   ])
 
   if (cargando) return <PantallaCargaSesion />
+  if (rutaReconocida.tipo === 'activar_cuenta') {
+    if (autenticado && cargandoPerfil) {
+      return <PantallaCargaSesion mensaje="Validando la invitación..." />
+    }
+    return (
+      <PantallaActivarCuenta
+        autenticado={autenticado}
+        cargando={false}
+        perfil={perfil}
+      />
+    )
+  }
   if (!autenticado) return <PantallaInicioSesion />
   if (cargandoPerfil) {
     return <PantallaCargaSesion mensaje="Cargando tu perfil..." />
   }
+  if (perfil?.estado === 'inactivo') return <PantallaCuentaInactiva />
 
   if (rutaReconocida.tipo === 'desconocida') {
     return <PantallaRutaNoEncontrada />
@@ -221,6 +250,7 @@ export function Rutas() {
     rutaReconocida.tipo === 'panel' ||
     rutaReconocida.tipo === 'panel_administrativo' ||
     rutaReconocida.tipo === 'gestion_clientes' ||
+    rutaReconocida.tipo === 'gestion_usuarios' ||
     rutaReconocida.tipo === 'gestion_usuarios_cliente' ||
     rutaReconocida.tipo === 'gestion_proyectos_cliente' ||
     rutaReconocida.tipo === 'detalle_proyecto_administrativo' ||
@@ -234,6 +264,9 @@ export function Rutas() {
   if (rol_usuario === 'administrador' && perfil && rutaPrivada) {
     if (rutaReconocida.tipo === 'gestion_clientes') {
       return <PantallaGestionClientes />
+    }
+    if (rutaReconocida.tipo === 'gestion_usuarios') {
+      return <PantallaGestionUsuarios />
     }
     if (rutaReconocida.tipo === 'gestion_usuarios_cliente') {
       return (
@@ -282,6 +315,47 @@ export function Rutas() {
   }
 
   return <PantallaAplicacionPrivada />
+}
+
+function PantallaCuentaInactiva() {
+  const { cerrarSesion } = usarAutenticacion()
+  const [cerrandoSesion, establecerCerrandoSesion] = useState(false)
+  const [error, establecerError] = useState(false)
+
+  async function manejarCierreSesion() {
+    establecerCerrandoSesion(true)
+    establecerError(false)
+    try {
+      const { error: errorAuth } = await cerrarSesion()
+      establecerError(Boolean(errorAuth))
+    } catch {
+      establecerError(true)
+    } finally {
+      establecerCerrandoSesion(false)
+    }
+  }
+
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-yanax-verde-claro px-5 py-10">
+      <section className="w-full max-w-lg rounded-2xl border border-yanax-turquesa/10 bg-white p-6 text-center shadow-sm sm:p-9">
+        <ShieldCheck aria-hidden="true" className="mx-auto size-10 text-yanax-turquesa" />
+        <h1 className="mt-4 text-2xl font-semibold text-yanax-azul-profundo">Acceso inactivo</h1>
+        <p className="mt-3 text-sm leading-6 text-yanax-azul-profundo/75">
+          Esta cuenta está desactivada. Tus proyectos y relaciones se conservan.
+          Contacta al administrador de Yanax si necesitas recuperar el acceso.
+        </p>
+        {error && <p className="mt-4 text-sm text-yanax-coral" role="alert">No fue posible cerrar la sesión.</p>}
+        <button
+          className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-yanax-turquesa px-4 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yanax-naranja disabled:opacity-60"
+          disabled={cerrandoSesion}
+          onClick={() => void manejarCierreSesion()}
+          type="button"
+        >
+          {cerrandoSesion ? 'Cerrando sesión...' : 'Cerrar sesión'}
+        </button>
+      </section>
+    </main>
+  )
 }
 
 function PantallaRutaNoEncontrada() {
@@ -421,8 +495,8 @@ function PantallaAplicacionPrivada() {
               className="mt-7 rounded-lg border border-yanax-naranja/50 bg-yanax-naranja/10 px-4 py-3 text-sm text-yanax-azul-profundo"
               role="status"
             >
-              No encontramos un perfil asociado a tu cuenta. Comunícate con tu
-              contacto en Yanax.
+              No encontramos un perfil activo para esta sesión o no fue posible
+              cargarlo. Comunícate con tu contacto en Yanax.
             </p>
           )}
 

@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Building2, LayoutDashboard, LogOut } from 'lucide-react'
+import { Building2, LayoutDashboard, LogOut, UsersRound } from 'lucide-react'
 import { usarAutenticacion } from '@/dominio/autenticacion/contexto-autenticacion'
 
-type SeccionAdministrativa = 'inicio' | 'clientes'
+type SeccionAdministrativa = 'inicio' | 'clientes' | 'usuarios'
 
 interface PropiedadesNavegacionAdministrativa {
   seccionActual: SeccionAdministrativa
@@ -25,6 +25,12 @@ const enlacesNavegacion: {
     icono: Building2,
     ruta: '/aplicacion/administracion/clientes',
     seccion: 'clientes',
+  },
+  {
+    etiqueta: 'Usuarios',
+    icono: UsersRound,
+    ruta: '/aplicacion/administracion/usuarios',
+    seccion: 'usuarios',
   },
 ]
 
@@ -74,7 +80,7 @@ export function NavegacionAdministrativa({
 
         <nav
           aria-label="Navegación administrativa"
-          className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap"
+          className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap"
         >
           {enlacesNavegacion.map(
             ({ etiqueta, icono: Icono, ruta, seccion }) => {

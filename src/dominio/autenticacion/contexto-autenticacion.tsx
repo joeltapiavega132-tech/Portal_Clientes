@@ -95,14 +95,19 @@ export function ProveedorAutenticacion({
     const usuarioId = sesion?.user.id
 
     if (!usuarioId) return
+    const usuarioIdActual = usuarioId
 
     let consultaActiva = true
+    let consultaActual = 0
 
-    void (async () => {
+    async function cargarPerfil(mostrarCarga: boolean) {
+      const numeroConsulta = ++consultaActual
+      if (mostrarCarga) establecerCargandoPerfil(true)
+
       try {
         const { data: perfilEncontrado, error } =
-          await obtenerPerfilUsuario(usuarioId)
-        if (!consultaActiva) return
+          await obtenerPerfilUsuario(usuarioIdActual)
+        if (!consultaActiva || numeroConsulta !== consultaActual) return
 
         if (error) {
           establecerPerfil(null)
@@ -116,7 +121,7 @@ export function ProveedorAutenticacion({
 
         establecerCargandoPerfil(false)
       } catch {
-        if (!consultaActiva) return
+        if (!consultaActiva || numeroConsulta !== consultaActual) return
 
         establecerPerfil(null)
         establecerErrorCargaPerfil(
@@ -124,10 +129,20 @@ export function ProveedorAutenticacion({
         )
         establecerCargandoPerfil(false)
       }
-    })()
+    }
+
+    void cargarPerfil(true)
+    const intervaloActualizacion = window.setInterval(
+      () => void cargarPerfil(false),
+      30_000,
+    )
+    const actualizarAlVolver = () => void cargarPerfil(false)
+    window.addEventListener('focus', actualizarAlVolver)
 
     return () => {
       consultaActiva = false
+      window.clearInterval(intervaloActualizacion)
+      window.removeEventListener('focus', actualizarAlVolver)
     }
   }, [sesion?.user.id])
 
